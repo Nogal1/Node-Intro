@@ -3,7 +3,7 @@ const axios = require('axios');
 
 function handleOutput(content, outputPath) {
     if (outputPath) {
-        fs.writeFile(outputPath, content, 'utf8', (err) => {
+        fs.appendFile(outputPath, content + '\n', 'utf8', (err) => {
             if (err) {
                 console.error(`Couldn't write ${outputPath}:\n  ${err}`);
                 process.exit(1);
@@ -35,23 +35,29 @@ async function webCat(url, outputPath) {
     }
 }
 
-let outputPath;
-let input;
-
-if (process.argv[2] === '--out') {
-    outputPath = process.argv[3];
-    input = process.argv[4];
-} else {
-    input = process.argv[2];
-}
-
-if (input) {
+function processInput(input, outputPath) {
     if (input.startsWith('http')) {
         webCat(input, outputPath);
     } else {
         cat(input, outputPath);
     }
+}
+
+let outputPath;
+let inputs;
+
+if (process.argv[2] === '--out') {
+    outputPath = process.argv[3];
+    inputs = process.argv.slice(4);
 } else {
-    console.error('Please provide a file path or URL as an argument.');
+    inputs = process.argv.slice(2);
+}
+
+if (inputs.length === 0) {
+    console.error('Please provide at least one file path or URL as an argument.');
     process.exit(1);
+}
+
+for (let input of inputs) {
+    processInput(input, outputPath);
 }
